@@ -32,7 +32,6 @@ export interface CasoResumen {
   /** null: «Sin enviar». */
   enviado_a_panel_en: string | null
   vence_en: string | null
-  conservacion_extendida: boolean
 }
 
 export interface Pagina<T> {
@@ -60,7 +59,7 @@ export type FiltrosCasos = {
   tecnico: string
   /** Coincidencia de síntomas mínima: '50', '70' u '85'. */
   coincidencia: string
-  /** '15', '30' o 'extendida'. */
+  /** '15' o '30' (días para vencer). */
   vencimiento: string
   /** aaaa-mm-dd */
   desde: string
@@ -75,7 +74,10 @@ export interface OpcionesFiltroCasos {
   cultivos: { id: string; nombre: string; finca_id: string }[]
 }
 
-/** Técnico que puede recibir casos, con su carga (GET /tecnicos?activo=true&con_carga=true). */
+/**
+ * Técnico que puede recibir casos, con su carga (GET /tecnicos?activo=true&con_carga=true).
+ * Solo cuentas de rol TECNICO; la cuenta de técnico del líder aparece como una más.
+ */
 export interface TecnicoAsignable {
   id: string
   nombre: string
@@ -120,6 +122,13 @@ export interface CasoDetalle extends Omit<CasoResumen, 'productor' | 'finca' | '
   historial_ultimo: { titulo: string; en: string } | null
   /** Diagnóstico técnico guardado (Registrado o Cerrado). */
   diagnostico: Diagnostico | null
+  /**
+   * Permisos calculados por el servidor para el usuario actual. La UI se guía por ellos y no
+   * por el rol. `puede_diagnosticar` es siempre falso para el líder (D-02).
+   */
+  puede_diagnosticar: boolean
+  puede_cerrar: boolean
+  puede_asignar: boolean
 }
 
 /** Resultado técnico · decisión humana (POST /casos/{id}/diagnostico). */
@@ -139,8 +148,6 @@ export interface DatosDiagnostico {
   motivo_visita?: string | null
   descripcion?: string
   observaciones?: string
-  /** Solo el líder lo elige; el técnico es siempre el responsable de sus casos. */
-  tecnico_responsable_id?: string | null
 }
 
 /** Foto de evidencia (GET /casos/{id}/evidencias). La URL es prefirmada y vence. */
@@ -162,14 +169,7 @@ export interface Cuestionario {
 }
 
 export type TipoEventoHistorial =
-  | 'CREADO'
-  | 'ANALISIS'
-  | 'ENVIADO'
-  | 'ASIGNADO'
-  | 'DIAGNOSTICO'
-  | 'CIERRE'
-  | 'EXTENSION'
-  | 'DESCARTE'
+  'CREADO' | 'ANALISIS' | 'ENVIADO' | 'ASIGNADO' | 'DIAGNOSTICO' | 'CIERRE' | 'DESCARTE'
 
 /** Paso del historial (GET /casos/{id}/historial). Los pasos futuros llegan con `pendiente`. */
 export interface EventoHistorial {
