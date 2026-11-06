@@ -37,6 +37,35 @@ Código de recuperación de cuenta en el simulador: `123456`. Tras 5 intentos fa
 
 El catálogo de componentes está en `/dev/ui` (solo con `npm run dev`).
 
+## Variables de entorno
+
+| Variable | Para qué |
+|---|---|
+| `VITE_API_URL` | Base de la API (`/api/v1`: en producción el panel y la API comparten el dominio de CloudFront) |
+| `VITE_USE_MOCKS` | `true` simula la API y Cognito en el navegador; `false` usa el backend y Cognito reales |
+| `VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_CLIENT_ID` | User Pool del panel; obligatorias con `VITE_USE_MOCKS=false` |
+| `VITE_GOOGLE_MAPS_API_KEY` | Opcional. Mapas de fincas y casos; sin clave se muestran esquemáticos. El mapa de vigilancia no la necesita |
+
+Las variables `VITE_*` quedan dentro del paquete publicado: no pongas ahí nada secreto.
+
+## Mapas
+
+- **Mapa de vigilancia** (`src/features/mapa`): Leaflet sobre OpenStreetMap, sin clave. Muestra fincas, casos y
+  alertas de Zetaquirá con sus filtros.
+- **Mapas de fincas y casos** (`src/components/mapa`): Google Maps si hay `VITE_GOOGLE_MAPS_API_KEY`; si no, la vista
+  esquemática.
+
+## Despliegue
+
+El panel es estático: `npm run build` con `VITE_USE_MOCKS=false` y las variables de Cognito, y el contenido de `dist/`
+se sube al bucket `anuc-panel-web-fitochat`. CloudFront lo sirve en la misma URL que la API (`/api/*` va al backend; el
+resto, al bucket con la función `anuc-spa-rewrite`). Después de subirlo, invalida `/index.html` en CloudFront para que
+los navegadores tomen la versión nueva. Se publica desde `main`.
+
+## Ramas
+
+`feature/*` o `fix/*` → `develop` → `main`. Lo que va a producción sale de `main`.
+
 ## Reglas de dependencias
 
 `pages → features → components / services / hooks`. ESLint las hace cumplir:
