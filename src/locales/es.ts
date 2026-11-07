@@ -10,7 +10,6 @@ import type {
   ResultadoTecnico,
   Rol,
   TipoCultivo,
-  TipoEvidencia,
   Vereda,
 } from '@/types/enums'
 
@@ -97,13 +96,6 @@ export const TIPO_CULTIVO_LABEL: Record<TipoCultivo, string> = {
   CAMPO_ABIERTO: 'Campo abierto',
 }
 
-export const TIPO_EVIDENCIA_LABEL: Record<TipoEvidencia, string> = {
-  HOJA: 'Hoja',
-  ENVES: 'Envés',
-  FRUTO: 'Fruto',
-  TALLO: 'Tallo',
-  PLANTA_COMPLETA: 'Otras',
-}
 
 export const VEREDA_LABEL: Record<Vereda, string> = {
   JURACAMBITA: 'Juracambita',
