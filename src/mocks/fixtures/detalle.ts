@@ -1,6 +1,6 @@
 // Detalle simulado de los casos (pantalla 6). Los casos #0241, #0239 y #0226 usan los textos de
 // los artboards 04, 04b y 04c; el resto se genera a partir de la bandeja. Datos ficticios (P-16).
-import type { Categoria, TipoEvidencia } from '@/types/enums'
+import type { Categoria } from '@/types/enums'
 import { casos, type CasoFixture, type DiagnosticoFixture } from './casos'
 import { fincas } from './fincas'
 
@@ -97,13 +97,9 @@ const NOMBRE: Record<Categoria, string> = {
   FUSARIUM: 'Fusarium',
 }
 
-const TIPOS: TipoEvidencia[] = ['HOJA', 'ENVES', 'FRUTO', 'TALLO']
-const PREGUNTA_FOTO: Record<string, string> = {
-  HOJA: '«Envíe una foto de una hoja afectada»',
-  ENVES: '«Voltee la hoja y envíe una foto del envés»',
-  FRUTO: '«Envíe una foto cercana del fruto afectado»',
-  TALLO: '«Envíe una foto del tallo cerca de la base»',
-}
+// Solo para variar las descripciones de las fotos simuladas: el panel no clasifica por parte de la planta.
+const TIPOS = ['HOJA', 'ENVES', 'FRUTO', 'TALLO']
+const PREGUNTA_FOTO = 'Fotografía de evidencia'
 const DESCRIPCIONES: Record<string, string[]> = {
   HOJA: ['Manchas en la hoja', 'Hoja con bordes secos', 'Hoja amarillenta'],
   ENVES: ['Envés con puntos oscuros', 'Envés de hoja joven'],
@@ -111,7 +107,7 @@ const DESCRIPCIONES: Record<string, string[]> = {
   TALLO: ['Tallo oscuro en la base', 'Corte del tallo', 'Tallo con lesión'],
 }
 
-/** Evidencias por tipo de cada caso: las del diseño o un reparto según la categoría. */
+/** Cuántas fotos de cada parte de la planta trae cada caso simulado (solo varía las descripciones). */
 function reparto(c: CasoFixture): Record<string, number> {
   if (c.id === '0241') return { HOJA: 3, ENVES: 2, FRUTO: 3, TALLO: 0 }
   if (c.id === '0226') return { HOJA: 2, ENVES: 1, FRUTO: 0, TALLO: 3 }
@@ -139,15 +135,14 @@ export function evidenciasDe(c: CasoFixture) {
       i++
       lista.push({
         id: `${c.id}-ev-${i}`,
-        tipo,
-        numero: k,
+        numero: i,
         descripcion:
           c.id === '0241' && tipo === 'FRUTO' && k === 2
             ? 'Polvo gris en la cáscara'
             : DESCRIPCIONES[tipo]![(k - 1) % 3]!,
         url: null,
         recibida_en: mas(inicio, (5 + i * 2) * MIN),
-        pregunta: PREGUNTA_FOTO[tipo]!,
+        pregunta: PREGUNTA_FOTO,
       })
     }
   }
@@ -426,9 +421,6 @@ export function detalleDe(c: CasoFixture) {
     ? cultivo.tipo === 'INVERNADERO'
     : /invernadero/i.test(c.cultivo.nombre)
   const especies = cultivo?.especies ?? [c.especie]
-  const porTipo: Record<string, number> = {}
-  for (const e of ev) porTipo[e.tipo] = (porTipo[e.tipo] ?? 0) + 1
-  for (const t of TIPOS) porTipo[t] ??= 0
 
   return {
     ...c,
@@ -469,7 +461,7 @@ export function detalleDe(c: CasoFixture) {
         : null,
     cerrado_en: cerradoEn(c),
     diagnostico: diagnosticoDe(c),
-    evidencias_resumen: { total: ev.length, maximo: 12, por_tipo: porTipo },
+    evidencias_resumen: { total: ev.length, maximo: 12 },
     cuestionario_resumen: {
       respuestas: cuest.respuestas.length,
       desde: cuest.desde,

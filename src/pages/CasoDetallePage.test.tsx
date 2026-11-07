@@ -72,24 +72,22 @@ describe('Detalle del caso · lectura', () => {
   it('el visor recorre las evidencias con el teclado y se cierra con Esc (04e)', async () => {
     const { user } = await renderApp(LIDER, '/casos/0241')
     expect(await screen.findByText('8/12')).toBeInTheDocument()
-    expect(screen.getByText('Sin fotos')).toBeInTheDocument()
-    await user.click(
-      screen.getByRole('button', { name: 'Ver 3 evidencias de fruto del caso #0241' }),
-    )
+    expect(screen.queryByText(/envés|tallo/i)).not.toBeInTheDocument() // sin clasificación por parte de la planta
+    await user.click(screen.getByRole('button', { name: 'Ver la foto 6 de 8 del caso #0241' }))
 
     const visor = await screen.findByRole('dialog', {
       name: /Caso #0241 · Evidencias fotográficas/,
     })
-    expect(await within(visor).findByText('Fruto 1 de 3 · evidencia 6 de 8')).toBeInTheDocument()
+    expect(await within(visor).findByText('Foto 6 de 8')).toBeInTheDocument()
     await user.keyboard('{ArrowRight}')
-    expect(within(visor).getByText('Fruto 2 de 3 · evidencia 7 de 8')).toBeInTheDocument()
+    expect(within(visor).getByText('Foto 7 de 8')).toBeInTheDocument()
     expect(
       within(visor).getByRole('img', {
-        name: 'Evidencia fruto 2 · caso #0241: Polvo gris en la cáscara',
+        name: 'Evidencia 7 · caso #0241: Polvo gris en la cáscara',
       }),
     ).toBeInTheDocument()
     await user.keyboard('{ArrowLeft}{ArrowLeft}')
-    expect(within(visor).getByText('Envés 2 de 2 · evidencia 5 de 8')).toBeInTheDocument()
+    expect(within(visor).getByText('Foto 5 de 8')).toBeInTheDocument()
     await user.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })

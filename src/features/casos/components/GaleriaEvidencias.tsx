@@ -1,19 +1,17 @@
 import { useState } from 'react'
 import { Camera } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { TIPO_EVIDENCIA_LABEL, etiqueta } from '@/locales/es'
-import type { TipoEvidencia } from '@/types/enums'
 import type { CasoDetalle } from '../types'
-import { TIPOS_GALERIA } from '../utils'
 import { VisorEvidencias } from './VisorEvidencias'
 
 /**
- * Evidencias fotográficas del caso (artboard 04): conteo útil (8/12), un recuadro por tipo con
- * su número de fotos («Sin fotos» si no hay) y «Ver todas». Cada recuadro abre el visor.
+ * Evidencias fotográficas del caso (artboard 04): conteo útil (8/12), un recuadro por foto en el
+ * orden en que llegaron y «Ver todas». Las fotos no se clasifican por parte de la planta: basta con
+ * que sean de la planta. Cada recuadro abre el visor en esa foto.
  */
 export function GaleriaEvidencias({ caso }: { caso: CasoDetalle }) {
-  const [visor, setVisor] = useState<{ tipo?: TipoEvidencia } | null>(null)
-  const { total, maximo, por_tipo } = caso.evidencias_resumen
+  const [visor, setVisor] = useState<{ indice: number } | null>(null)
+  const { total, maximo } = caso.evidencias_resumen
 
   return (
     <section
@@ -28,50 +26,41 @@ export function GaleriaEvidencias({ caso }: { caso: CasoDetalle }) {
           {total}/{maximo}
           <span className="sr-only"> evidencias útiles</span>
         </span>
-        <Button variant="secondary" size="sm" disabled={total === 0} onClick={() => setVisor({})}>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={total === 0}
+          onClick={() => setVisor({ indice: 0 })}
+        >
           Ver todas
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {TIPOS_GALERIA.map((tipo) => {
-          const n = por_tipo[tipo] ?? 0
-          const nombre = etiqueta(TIPO_EVIDENCIA_LABEL, tipo)
-          if (n === 0) {
-            return (
-              <div
-                key={tipo}
-                className="flex aspect-[4/3] flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-borde-control bg-blanco p-2 text-center text-tinta-terciaria"
-              >
-                <span className="text-[11px] leading-4 font-semibold tracking-[0.06em] uppercase">
-                  {nombre}
-                </span>
-                <span className="text-xs leading-4 font-medium">Sin fotos</span>
-              </div>
-            )
-          }
-          return (
+      {total === 0 ? (
+        <div className="flex aspect-[8/1] min-h-20 items-center justify-center rounded-lg border border-dashed border-borde-control bg-blanco p-2 text-xs leading-4 font-medium text-tinta-terciaria">
+          Sin fotos
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {Array.from({ length: total }, (_, i) => (
             <button
-              key={tipo}
+              key={i}
               type="button"
-              onClick={() => setVisor({ tipo })}
-              aria-label={`Ver ${n} ${n === 1 ? 'evidencia' : 'evidencias'} de ${nombre.toLowerCase()} del caso #${caso.id}`}
+              onClick={() => setVisor({ indice: i })}
+              aria-label={`Ver la foto ${i + 1} de ${total} del caso #${caso.id}`}
               className="relative flex aspect-[4/3] cursor-zoom-in flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-borde bg-verde-100 p-2 text-verde-800 hover:border-verde-300"
             >
               <span className="absolute top-2 left-2 rounded-sm border border-borde bg-blanco px-1.5 text-[11px] leading-4 font-semibold text-tinta-secundaria">
-                {n}
+                {i + 1}
               </span>
               <Camera size={22} strokeWidth={1.75} aria-hidden="true" />
-              <span className="text-[11px] leading-4 font-semibold tracking-[0.06em] text-tinta-secundaria uppercase">
-                {nombre}
-              </span>
             </button>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
       {visor && (
-        <VisorEvidencias caso={caso} tipoInicial={visor.tipo} onClose={() => setVisor(null)} />
+        <VisorEvidencias caso={caso} indiceInicial={visor.indice} onClose={() => setVisor(null)} />
       )}
     </section>
   )

@@ -74,15 +74,6 @@ export const TipoCultivo = {
 } as const
 export type TipoCultivo = (typeof TipoCultivo)[keyof typeof TipoCultivo]
 
-/** PLANTA_COMPLETA, si llega de la API, se agrupa como «Otras». */
-export const TipoEvidencia = {
-  HOJA: 'HOJA',
-  ENVES: 'ENVES',
-  FRUTO: 'FRUTO',
-  TALLO: 'TALLO',
-  PLANTA_COMPLETA: 'PLANTA_COMPLETA',
-} as const
-export type TipoEvidencia = (typeof TipoEvidencia)[keyof typeof TipoEvidencia]
 
 /** Veredas del diseño. La lista real viene de la API. */
 export const Vereda = {

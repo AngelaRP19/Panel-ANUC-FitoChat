@@ -2,21 +2,19 @@ import { useRef, useState, type KeyboardEvent } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Camera, ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { Spinner } from '@/components/ui/Spinner'
-import { TIPO_EVIDENCIA_LABEL, etiqueta } from '@/locales/es'
-import type { TipoEvidencia } from '@/types/enums'
 import { cn } from '@/utils/cn'
 import { formatearFechaHora } from '@/utils/fechas'
 import { useEvidencias } from '../hooks'
 import type { CasoDetalle } from '../types'
-import { TIPOS_GALERIA, textoAlternativo } from '../utils'
+import { textoAlternativo } from '../utils'
 
 const botonOscuro =
   'grid cursor-pointer place-items-center border border-verde-800 bg-verde-900 text-verde-100 hover:bg-verde-800 disabled:cursor-not-allowed disabled:opacity-40'
 
 interface VisorEvidenciasProps {
   caso: CasoDetalle
-  /** Tipo con el que se abre (la primera foto de ese tipo). */
-  tipoInicial?: TipoEvidencia
+  /** Foto con la que se abre (0 = la primera). */
+  indiceInicial?: number
   onClose: () => void
 }
 
@@ -25,15 +23,15 @@ interface VisorEvidenciasProps {
  * del teclado para cambiar de foto, Esc para cerrar y foco atrapado (Radix Dialog).
  * Si una URL prefirmada venció (la imagen falla), se piden de nuevo sin recargar la página.
  */
-export function VisorEvidencias({ caso, tipoInicial, onClose }: VisorEvidenciasProps) {
+export function VisorEvidencias({ caso, indiceInicial = 0, onClose }: VisorEvidenciasProps) {
   const { data, isPending, refetch } = useEvidencias(caso.id)
   const evidencias = data ?? []
-  // null = todavía no se elige: se muestra la primera evidencia del tipo pedido.
+  // null = todavía no se elige: se muestra la foto con la que se abrió el visor.
   const [elegido, setElegido] = useState<number | null>(null)
   const [zoom, setZoom] = useState(1)
   const renovada = useRef<string | null>(null)
 
-  const inicial = Math.max(0, tipoInicial ? evidencias.findIndex((e) => e.tipo === tipoInicial) : 0)
+  const inicial = Math.min(Math.max(0, indiceInicial), Math.max(0, evidencias.length - 1))
   const indice = data ? (elegido ?? inicial) : null
   const actual = indice !== null ? evidencias[indice] : undefined
   const ir = (i: number) => {
@@ -47,10 +45,7 @@ export function VisorEvidencias({ caso, tipoInicial, onClose }: VisorEvidenciasP
     if (e.key === 'ArrowLeft') ir(indice - 1)
   }
 
-  const delTipo = actual ? evidencias.filter((e) => e.tipo === actual.tipo) : []
-  const contador = actual
-    ? `${etiqueta(TIPO_EVIDENCIA_LABEL, actual.tipo)} ${actual.numero} de ${delTipo.length} · evidencia ${indice! + 1} de ${evidencias.length}`
-    : ''
+  const contador = actual ? `Foto ${indice! + 1} de ${evidencias.length}` : ''
 
   return (
     <Dialog.Root open onOpenChange={(abierto) => !abierto && onClose()}>
@@ -159,10 +154,7 @@ export function VisorEvidencias({ caso, tipoInicial, onClose }: VisorEvidenciasP
               {actual && (
                 <dl className="m-0 grid gap-3 text-cuerpo-sm">
                   {[
-                    [
-                      'Tipo',
-                      `${etiqueta(TIPO_EVIDENCIA_LABEL, actual.tipo)} · ${actual.numero} de ${delTipo.length}`,
-                    ],
+                    ['Foto', `${actual.numero} de ${evidencias.length}`],
                     ['Recibida por WhatsApp', formatearFechaHora(actual.recibida_en)],
                     ['Enviada por', caso.productor.nombre],
                     ['Pregunta del chatbot', actual.pregunta],
@@ -183,43 +175,32 @@ export function VisorEvidencias({ caso, tipoInicial, onClose }: VisorEvidenciasP
 
           <div
             role="group"
-            aria-label="Miniaturas por tipo"
+            aria-label="Miniaturas"
             className="flex flex-none flex-wrap items-end gap-6 px-4 pb-5 sm:px-6"
           >
-            {TIPOS_GALERIA.map((tipo) => {
-              const fotos = evidencias.filter((e) => e.tipo === tipo)
-              return (
-                <div key={tipo}>
-                  <p className="mb-1.5 text-xs leading-4 font-semibold tracking-[0.06em] text-verde-300 uppercase">
-                    {etiqueta(TIPO_EVIDENCIA_LABEL, tipo)} · {fotos.length}
-                  </p>
-                  <div className="flex gap-2">
-                    {fotos.length === 0 && (
-                      <span className="grid h-16.5 w-22 place-items-center rounded-sm border border-dashed border-verde-800 text-xs text-verde-300">
-                        Sin fotos
-                      </span>
-                    )}
-                    {fotos.map((e) => {
-                      const i = evidencias.indexOf(e)
-                      const sel = i === indice
-                      return (
-                        <button
-                          key={e.id}
-                          type="button"
-                          onClick={() => ir(i)}
-                          aria-label={`${textoAlternativo(e, caso.id)}: ${e.descripcion}`}
-                          aria-current={sel || undefined}
-                          className={cn(
-                            'h-16.5 w-22 cursor-pointer rounded-sm border border-verde-800 bg-verde-900 hover:bg-verde-800',
-                            sel && 'bg-verde-800 outline-2 outline-offset-2 outline-verde-300',
-                          )}
-                        />
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
+            <div>
+              <p className="mb-1.5 text-xs leading-4 font-semibold tracking-[0.06em] text-verde-300 uppercase">
+                Fotos · {evidencias.length}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {evidencias.map((e, i) => {
+                  const sel = i === indice
+                  return (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => ir(i)}
+                      aria-label={`${textoAlternativo(e, caso.id)}: ${e.descripcion}`}
+                      aria-current={sel || undefined}
+                      className={cn(
+                        'h-16.5 w-22 cursor-pointer rounded-sm border border-verde-800 bg-verde-900 hover:bg-verde-800',
+                        sel && 'bg-verde-800 outline-2 outline-offset-2 outline-verde-300',
+                      )}
+                    />
+                  )
+                })}
+              </div>
+            </div>
             <div className="ml-auto text-right">
               <p className="font-titulos text-[28px] leading-8 font-bold text-blanco tabular-nums">
                 {caso.evidencias_resumen.total}/{caso.evidencias_resumen.maximo}
