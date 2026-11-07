@@ -8,7 +8,6 @@ import type {
   ResultadoTecnico,
   Rol,
   TipoCultivo,
-  TipoEvidencia,
   Vereda,
 } from '@/types/enums'
 
@@ -116,7 +115,6 @@ export interface CasoDetalle extends Omit<CasoResumen, 'productor' | 'finca' | '
     total: number
     /** Máximo de evidencias útiles que pide el chatbot (12). */
     maximo: number
-    por_tipo: Partial<Record<TipoEvidencia, number>>
   }
   cuestionario_resumen: { respuestas: number; desde: string | null; hasta: string | null }
   historial_ultimo: { titulo: string; en: string } | null
@@ -153,8 +151,7 @@ export interface DatosDiagnostico {
 /** Foto de evidencia (GET /casos/{id}/evidencias). La URL es prefirmada y vence. */
 export interface Evidencia {
   id: string
-  tipo: TipoEvidencia
-  /** Número dentro de su tipo (Fruto 2). */
+  /** Orden en que llegó la foto (1, 2, 3…). Las fotos no se clasifican por parte de la planta. */
   numero: number
   descripcion: string
   url: string | null
