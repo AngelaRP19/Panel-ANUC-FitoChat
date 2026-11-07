@@ -6,6 +6,8 @@ el diseño de referencia es el lienzo «Panel Fitosanitario ANUC · Pantallas» 
 
 ## Comandos
 
+Node.js 24 (versión fijada en `.nvmrc`). El uso del panel y del chatbot está en `docs/MANUAL_USUARIO.md`; la instalación y el despliegue, en `docs/MANUAL_INSTALACION.md` del backend.
+
 ```bash
 npm install
 cp .env.example .env.local   # VITE_USE_MOCKS=true para trabajar sin backend ni Cognito
@@ -13,6 +15,7 @@ npm run dev        # http://localhost:5173 (proxy /api → http://localhost:8000
 npm run typecheck
 npm run lint
 npm test
+npm run coverage   # Vitest con cobertura; la CI exige 80 %
 npm run build
 npm run gen:api    # regenera src/types/api.d.ts desde el OpenAPI del backend
 ```
@@ -61,6 +64,10 @@ El panel es estático: `npm run build` con `VITE_USE_MOCKS=false` y las variable
 se sube al bucket `anuc-panel-web-fitochat`. CloudFront lo sirve en la misma URL que la API (`/api/*` va al backend; el
 resto, al bucket con la función `anuc-spa-rewrite`). Después de subirlo, invalida `/index.html` en CloudFront para que
 los navegadores tomen la versión nueva. Se publica desde `main`.
+
+## Integración continua
+
+`.github/workflows/ci.yml` corre en cada pull request y en `develop` y `main`: ESLint, TypeScript, Vitest con cobertura mínima de 80 %, la construcción del panel y `npm audit` de las dependencias que llegan al navegador (falla con una vulnerabilidad alta). Dependabot propone actualizaciones cada semana sobre `develop`.
 
 ## Ramas
 
