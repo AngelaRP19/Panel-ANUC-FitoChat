@@ -7,7 +7,9 @@ const TECNICO = 'tecnico@anuc.test'
 
 const lista = () => screen.getByRole('list', { name: 'Alertas' })
 const items = () => within(lista()).getAllByRole('listitem')
-const detalle = () => screen.getByRole('region', { name: /en (Juracambita|San Luis|Centro)/ })
+// El mapa de la alerta también es una región («Radio de … en Juracambita»): se excluye.
+const detalle = () =>
+  screen.getByRole('region', { name: /^(?!Radio de).* en (Juracambita|San Luis|Centro)$/ })
 
 describe('Alertas epidemiológicas', () => {
   it('el líder ve la lista por estado y el detalle de la primera alerta', async () => {
@@ -47,20 +49,17 @@ describe('Alertas epidemiológicas', () => {
     expect(
       within(d).getByText('#0229, #0228, #0219, #0216 · Los Naranjos, Buenavista y La Cabaña'),
     ).toBeInTheDocument()
-    expect(
-      within(d).getByRole('img', {
-        name: 'Radio de 3,5 km alrededor de 4 casos confirmados de Trips en Juracambita',
-      }),
-    ).toBeInTheDocument()
+    // El mismo mapa del mapa de vigilancia (OpenStreetMap), con la zona afectada señalada.
+    const mapa = within(d).getByRole('region', {
+      name: 'Radio de 3,5 km alrededor de 4 casos confirmados de Trips en Juracambita',
+    })
     expect(
       within(d).getByText('Zona de la alerta · 4 casos de Trips en un radio de 3,5 km'),
     ).toBeInTheDocument()
-    // Un clic en el mapa abre Google Maps en la zona de la alerta (pestaña nueva).
-    const mapa = within(d).getByRole('link', { name: /^Abrir en Google Maps: Radio de 3,5 km/ })
-    expect(mapa).toHaveAttribute('target', '_blank')
-    expect(mapa.getAttribute('href')).toMatch(
-      /^https:\/\/www\.google\.com\/maps\/@\?api=1&map_action=map&center=5\.\d+,-73\.\d+&zoom=\d+&basemap=terrain$/,
-    )
+    expect(within(d).getByText('Radio 3,5 km')).toBeInTheDocument()
+    expect(mapa.querySelectorAll('path.leaflet-interactive, svg path')).not.toHaveLength(0) // el círculo
+    expect(mapa.querySelectorAll('.marcador-caso')).toHaveLength(4) // un marcador por caso
+    expect(within(mapa).getByRole('link', { name: 'OpenStreetMap' })).toBeInTheDocument()
     expect(within(d).getByRole('button', { name: 'Confirmar alerta' })).toBeInTheDocument()
   })
 
