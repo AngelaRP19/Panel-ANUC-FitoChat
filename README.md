@@ -47,14 +47,15 @@ El catálogo de componentes está en `/dev/ui` (solo con `npm run dev`).
 | `VITE_API_URL` | Base de la API (`/api/v1`: en producción el panel y la API comparten el dominio de CloudFront) |
 | `VITE_USE_MOCKS` | `true` simula la API y Cognito en el navegador; `false` usa el backend y Cognito reales |
 | `VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_CLIENT_ID` | User Pool del panel; obligatorias con `VITE_USE_MOCKS=false` |
-| `VITE_GOOGLE_MAPS_API_KEY` | Opcional. Mapas de fincas y casos; sin clave se muestran esquemáticos. El mapa de vigilancia no la necesita |
+| `VITE_GOOGLE_MAPS_API_KEY` | Opcional. Mapas de fincas y casos; sin clave se muestran esquemáticos. El mapa de vigilancia y el de las alertas no la necesitan |
 
 Las variables `VITE_*` quedan dentro del paquete publicado: no pongas ahí nada secreto.
 
 ## Mapas
 
-- **Mapa de vigilancia** (`src/features/mapa`): Leaflet sobre OpenStreetMap, sin clave. Muestra fincas, casos y
-  alertas de Zetaquirá con sus filtros.
+- **Mapa de vigilancia** (`src/features/mapa`) y **mapa de cada alerta** (`src/features/alertas`): Leaflet sobre
+  OpenStreetMap (`src/components/mapa/MapaLibre.tsx`), sin clave. El de vigilancia muestra los casos y las alertas de
+  Zetaquirá con sus filtros; el de la alerta, la zona afectada (círculo del radio) y sus casos.
 - **Mapas de fincas y casos** (`src/components/mapa`): Google Maps si hay `VITE_GOOGLE_MAPS_API_KEY`; si no, la vista
   esquemática.
 

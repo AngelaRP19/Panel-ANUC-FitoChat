@@ -107,7 +107,8 @@ Registrado (con diagnóstico) → Cerrado. Una consulta que el productor abandon
 ### 2.4 Alertas
 
 Cuando se concentran casos confirmados de una misma categoría en una zona y un periodo (según los parámetros
-epidemiológicos), el sistema genera una **alerta**. El líder la revisa, la confirma o la descarta, y puede redactar el
+epidemiológicos), el sistema genera una **alerta**. Su mapa (el mismo del mapa de vigilancia) señala la zona
+afectada con un círculo del radio y los casos que la forman. El líder la revisa, la confirma o la descarta, y puede redactar el
 **mensaje** para los productores y luego una **corrección** si hace falta. El técnico solo las consulta.
 
 ### 2.5 Mapa de vigilancia (líder)

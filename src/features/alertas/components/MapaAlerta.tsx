@@ -1,22 +1,12 @@
 import { Circle } from 'lucide-react'
-import {
-  CENTRO_ZETAQUIRA,
-  hayGoogleMaps,
-  urlGoogleMapsZona,
-  zoomParaRadio,
-  type Punto,
-} from '@/components/mapa/estilo'
-import { MapaEmbebido } from '@/components/mapa/MapaEmbebido'
-import { MapaGoogle } from '@/components/mapa/MapaGoogle'
-import { CirculoRadio, MarcadorCaso } from '@/components/mapa/Marcadores'
+import { CENTRO_ZETAQUIRA, type Punto } from '@/components/mapa/estilo'
+import { CirculoRadioLibre, MapaLibre, MarcadorCasoLibre } from '@/components/mapa/MapaLibre'
 import { FormaCategoria } from '@/components/ui/CategoriaMarca'
 import { CATEGORIA_FORMA_LABEL, CATEGORIA_LABEL } from '@/locales/es'
 import type { Categoria } from '@/types/enums'
 import type { CasoAlerta } from '../types'
 import { formatearKm } from '../utils'
 
-/** Alto del mapa en px (h-57.5): el zoom se elige para que el círculo quepa. */
-const ALTO = 230
 const KM_POR_GRADO = 111.32
 
 interface MapaAlertaProps {
@@ -27,38 +17,31 @@ interface MapaAlertaProps {
   etiqueta: string
 }
 
-/**
- * Leyenda: forma de la categoría y radio de la alerta. No intercepta el clic del mapa. En el
- * mapa embebido (sin figuras dibujadas) resume la zona en texto.
- */
+/** Leyenda bajo el mapa (encima taparía el círculo en la columna angosta del detalle). */
 function Leyenda({
   categoria,
   radioKm,
   numCasos,
-  dibujado,
 }: {
   categoria: Categoria
   radioKm: number
   numCasos: number
-  dibujado: boolean
 }) {
-  if (!dibujado) {
-    return (
-      <div className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-blanco/95 px-3 py-2 text-nota shadow-1">
+  return (
+    <div className="flex flex-col gap-1 text-nota text-tinta-secundaria">
+      <span className="font-semibold text-tinta">
         Zona de la alerta · {numCasos} casos de {CATEGORIA_LABEL[categoria]} en un radio de{' '}
         {formatearKm(radioKm)}
-      </div>
-    )
-  }
-  return (
-    <div className="pointer-events-none absolute bottom-2 left-2 flex flex-wrap gap-x-4 gap-y-1 rounded-md bg-blanco/95 px-3 py-2 text-nota shadow-1">
-      <span className="inline-flex items-center gap-1.5">
-        <FormaCategoria categoria={categoria} />
-        {CATEGORIA_LABEL[categoria]} confirmado ({CATEGORIA_FORMA_LABEL[categoria]})
       </span>
-      <span className="inline-flex items-center gap-1.5">
-        <Circle size={14} className="text-advertencia" strokeDasharray="4 3" aria-hidden="true" />
-        Radio {formatearKm(radioKm)}
+      <span className="flex flex-wrap gap-x-4 gap-y-1">
+        <span className="inline-flex items-center gap-1.5">
+          <FormaCategoria categoria={categoria} />
+          {CATEGORIA_LABEL[categoria]} confirmado ({CATEGORIA_FORMA_LABEL[categoria]})
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <Circle size={14} className="text-advertencia" strokeDasharray="4 3" aria-hidden="true" />
+          Radio {formatearKm(radioKm)}
+        </span>
       </span>
     </div>
   )
@@ -95,50 +78,35 @@ function limitesCirculo(centro: Punto, radioKm: number) {
 }
 
 /**
- * Mapa de la alerta (diseño 06) en Google Maps; un clic abre Google Maps en la zona. Con
- * clave de la API es el mapa en relieve con el círculo del radio y cada caso con la forma
- * de su categoría y su número (clic en un caso: su punto). Sin clave es el mapa embebido
- * de la zona: Google lo desplaza al cargar, así que no se dibujan figuras encima.
+ * Mapa de la alerta: el mismo del mapa de vigilancia (OpenStreetMap, sin clave), encuadrado en
+ * la zona afectada, con el círculo del radio alrededor del centro de los casos y cada caso con la
+ * forma de su categoría. Antes era Google Maps y, sin clave de la API, solo un mapa embebido en el
+ * que no se podía señalar la zona.
  */
 export function MapaAlerta({ casos, categoria, radioKm, etiqueta }: MapaAlertaProps) {
   const u = ubicar(casos)
-  const centro = u?.centro ?? CENTRO_ZETAQUIRA
-  const zoom = zoomParaRadio(centro.lat, radioKm * 1000, ALTO - 40)
-  const enlace = urlGoogleMapsZona(centro, zoom)
-  const leyenda = (dibujado: boolean) => (
-    <Leyenda categoria={categoria} radioKm={radioKm} numCasos={casos.length} dibujado={dibujado} />
-  )
-
-  const embebido = (clase: string) => (
-    <MapaEmbebido
-      centro={centro}
-      zoom={zoom}
-      etiqueta={etiqueta}
-      enlace={enlace}
-      className={clase}
-      superpuesto={leyenda(false)}
-    />
-  )
-  if (!hayGoogleMaps() || !u) return embebido('h-57.5')
   return (
-    <MapaGoogle
-      etiqueta={etiqueta}
-      encuadre={{ limites: limitesCirculo(u.centro, radioKm) }}
-      enlace={enlace}
-      respaldo={embebido('h-full rounded-none border-0')}
-      className="h-57.5"
-      superpuesto={leyenda(true)}
-    >
-      <CirculoRadio centro={u.centro} radioKm={radioKm} />
-      {u.puntos.map(({ caso, posicion }) => (
-        <MarcadorCaso
-          key={caso.id}
-          posicion={posicion}
-          categoria={categoria}
-          codigo={caso.codigo}
-          titulo={`Caso #${caso.codigo} · ${caso.productor_nombre} · ${caso.finca_nombre}`}
-        />
-      ))}
-    </MapaGoogle>
+    <div className="flex flex-col gap-2">
+      <MapaLibre
+        etiqueta={etiqueta}
+        encuadre={
+          u
+            ? { limites: limitesCirculo(u.centro, radioKm) }
+            : { centro: CENTRO_ZETAQUIRA, zoom: 12 }
+        }
+        className="h-72"
+      >
+        {u && <CirculoRadioLibre centro={u.centro} radioKm={radioKm} />}
+        {u?.puntos.map(({ caso, posicion }) => (
+          <MarcadorCasoLibre
+            key={caso.id}
+            posicion={posicion}
+            categoria={categoria}
+            titulo={`Caso #${caso.codigo} · ${caso.productor_nombre} · ${caso.finca_nombre}`}
+          />
+        ))}
+      </MapaLibre>
+      <Leyenda categoria={categoria} radioKm={radioKm} numCasos={casos.length} />
+    </div>
   )
 }
