@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  calidad-y-pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      # Versión de Node fijada en .nvmrc (INC-02).
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Vitest con cobertura mínima de 80 %
+        run: npm run coverage
+
+      - name: Construir el panel
+        env:
+          VITE_USE_MOCKS: "false"
+          VITE_API_URL: /api/v1
+          VITE_COGNITO_USER_POOL_ID: us-east-1_ci
+          VITE_COGNITO_CLIENT_ID: ci
+        run: npm run build
+
+  dependencias:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      # I-20 (SQA): falla si una dependencia que llega al navegador tiene una vulnerabilidad alta o crítica.
+      - name: npm audit
+        run: npm audit --omit=dev --audit-level=high
