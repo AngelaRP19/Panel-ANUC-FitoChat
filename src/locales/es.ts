@@ -96,7 +96,6 @@ export const TIPO_CULTIVO_LABEL: Record<TipoCultivo, string> = {
   CAMPO_ABIERTO: 'Campo abierto',
 }
 
-
 export const VEREDA_LABEL: Record<Vereda, string> = {
   JURACAMBITA: 'Juracambita',
   CENTRO: 'Centro',
@@ -129,6 +128,7 @@ export const MENSAJES = {
     'El correo o la contraseña no son correctos. Revisa los datos e intenta de nuevo.',
   demasiadosIntentos: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
   cuentaInexistente: 'No hay ninguna cuenta registrada con este correo',
+  cuentaDeshabilitada: 'Esta cuenta está deshabilitada. Pide al líder técnico que la habilite.',
   contrasenaActualizada: 'Contraseña actualizada.',
   codigoInvalido: 'El código no es correcto o ya venció. Pide uno nuevo.',
   demasiadosIntentosTitulo: 'Demasiados intentos.',

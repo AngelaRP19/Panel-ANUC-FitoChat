@@ -93,7 +93,7 @@ export default function TecnicosPage() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             aria-label="Buscar técnico"
-            placeholder="Nombre o correo"
+            placeholder="Nombre, correo o celular"
             className="h-10 w-full rounded-sm border border-borde-control bg-blanco pr-3 pl-9.5 text-cuerpo-sm placeholder:text-tinta-terciaria focus:border-verde-600"
           />
         </div>

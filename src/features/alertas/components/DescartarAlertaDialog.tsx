@@ -6,8 +6,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { fieldDescriptionId, FormField } from '@/components/ui/FormField'
 import { Textarea } from '@/components/ui/Textarea'
 import { toast } from '@/components/ui/Toast'
-import { CATEGORIA_LABEL, MENSAJES, VEREDA_LABEL } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { CATEGORIA_LABEL, VEREDA_LABEL } from '@/locales/es'
+import { mensajeDeError } from '@/services/apiClient'
 import { useDescartarAlerta } from '../hooks'
 import { descarteSchema, type DescarteValues } from '../schemas'
 import type { Alerta } from '../types'
@@ -56,7 +56,7 @@ export function DescartarAlertaDialog({
     >
       {descartar.isError && (
         <Aviso tono="peligro" titulo="No se descartó la alerta.">
-          {esErrorApi(descartar.error) ? descartar.error.message : MENSAJES.errorConexionTexto}
+          {mensajeDeError(descartar.error)}
         </Aviso>
       )}
       <FormField

@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Select } from '@/components/ui/Select'
 import { toast } from '@/components/ui/Toast'
-import { CATEGORIA_LABEL, MENSAJES } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { CATEGORIA_LABEL } from '@/locales/es'
+import { esErrorApi, mensajeDeError } from '@/services/apiClient'
 import type { Categoria } from '@/types/enums'
 import type { TipoDocumento } from '../api'
 import { useSubirDocumento } from '../hooks'
@@ -89,7 +89,7 @@ export function SubirDocumentoModal({ onClose }: { onClose: () => void }) {
         <RequiredLegend />
         {errorGeneral && (
           <Aviso tono="peligro" titulo="No se subió el documento.">
-            {esErrorApi(subir.error) ? subir.error.message : MENSAJES.errorConexionTexto}
+            {mensajeDeError(subir.error)}
           </Aviso>
         )}
         <FormField label="Título" htmlFor="doc-t" required error={errores.titulo}>

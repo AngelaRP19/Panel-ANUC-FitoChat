@@ -40,6 +40,14 @@ describe('Técnicos (cuentas del panel)', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Buscar técnico' }), 'sanabria')
     await waitFor(() => expect(filas()[0]).toHaveTextContent('Jhon Fredy Sanabria'))
     expect(filas()).toHaveLength(1)
+
+    // RQF13: también por celular, como se escriba.
+    const buscar = screen.getByRole('searchbox', { name: 'Buscar técnico' })
+    expect(buscar).toHaveAttribute('placeholder', 'Nombre, correo o celular')
+    await user.clear(buscar)
+    await user.type(buscar, '311 259 3046')
+    await waitFor(() => expect(filas()[0]).toHaveTextContent('Ana Lucía Becerra'))
+    expect(filas()).toHaveLength(1)
   })
 
   it('desactiva un técnico con confirmación y explica qué pasa con sus casos', async () => {
@@ -109,6 +117,8 @@ describe('Técnicos (cuentas del panel)', () => {
     await user.click(within(form).getByRole('button', { name: 'Registrar técnico' }))
     expect(await within(form).findByText('Este correo ya está registrado')).toBeInTheDocument()
     expect(within(form).getByText('Este número de celular ya está registrado')).toBeInTheDocument()
+    // RQF07/RQF09/RQF11/RQF04: el 409 de duplicado no es un problema de conexión.
+    expect(within(form).queryByText(/No hay conexión|error inesperado/)).not.toBeInTheDocument()
 
     const correo = within(form).getByLabelText(/^Correo electrónico/)
     await user.clear(correo)

@@ -55,10 +55,15 @@ interface CuerpoFinca {
   latitud?: number
   longitud?: number
   productor_id?: string
-  cultivos?: { id: string; tipo: TipoCultivo; especies: Especie[] }[]
-  /** Guardar aunque se quite una especie usada por casos activos. */
-  forzar?: boolean
+  cultivos?: { id: string; nombre?: string; tipo: TipoCultivo; especies: Especie[] }[]
 }
+
+const sinTildes = (t: string) =>
+  t
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim()
 
 function validarFinca(b: CuerpoFinca) {
   const campos: Record<string, string> = {}
@@ -155,8 +160,8 @@ export const fincasHandlers = [
     return HttpResponse.json(aFinca(nueva), { status: 201 })
   }),
 
-  // Editar finca y las especies/tipo de sus cultivos (RQF15, RQF18). Quitar una especie que usa
-  // un caso activo responde 409 con los casos afectados, salvo que llegue `forzar`.
+  // Editar finca y el nombre, el tipo y las especies de sus cultivos (RQF15, RQF18). Como el
+  // backend, quitar una especie que usa algún caso responde 409 con los casos afectados.
   http.patch(`${API}/fincas/:id`, async ({ request, params }) => {
     const r = soloLider(request)
     if (r) return r
@@ -170,6 +175,19 @@ export const fincasHandlers = [
     if (Object.keys(campos).length) {
       return errorApi(422, 'VALIDACION', 'Revisa los campos marcados.', campos)
     }
+    const nombres = new Map(f.cultivos.map((c) => [c.id, c.nombre]))
+    for (const c of b.cultivos ?? []) if (c.nombre) nombres.set(c.id, c.nombre.trim())
+    for (const c of b.cultivos ?? []) {
+      const propio = nombres.get(c.id) ?? ''
+      const repetido = [...nombres].some(
+        ([id, n]) => id !== c.id && sinTildes(n) === sinTildes(propio),
+      )
+      if (c.nombre && repetido) {
+        return errorApi(409, 'DUPLICADO', 'Hay datos que ya están registrados.', {
+          [`cultivos.${c.id}.nombre`]: 'Esta finca ya tiene un cultivo con ese nombre',
+        })
+      }
+    }
     const afectados: { cultivo: string; especie: Especie; casos: string[] }[] = []
     for (const c of b.cultivos ?? []) {
       const actual = f.cultivos.find((x) => x.id === c.id)
@@ -180,11 +198,11 @@ export const fincasHandlers = [
           afectados.push({ cultivo: actual!.nombre, especie: e, casos: enUso.map((x) => x.id) })
       }
     }
-    if (afectados.length && !b.forzar) {
+    if (afectados.length) {
       return errorApi(
         409,
         'ESPECIE_EN_USO',
-        'Hay especies en uso por casos activos.',
+        'No se puede quitar una especie que tienen casos de este cultivo.',
         {},
         afectados,
       )
@@ -196,6 +214,7 @@ export const fincasHandlers = [
     for (const c of b.cultivos ?? []) {
       const actual = f.cultivos.find((x) => x.id === c.id)
       if (actual) {
+        if (c.nombre) actual.nombre = c.nombre.trim()
         actual.tipo = c.tipo
         actual.especies = [...c.especies]
       }

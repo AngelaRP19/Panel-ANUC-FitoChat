@@ -6,8 +6,7 @@ import { fieldDescriptionId, FormField, RequiredLegend } from '@/components/ui/F
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { toast } from '@/components/ui/Toast'
-import { MENSAJES } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { esErrorApi, mensajeDeError } from '@/services/apiClient'
 import { cn } from '@/utils/cn'
 import { aE164, formatearTelefono } from '@/utils/telefono'
 import { useEditarCuenta, useRegistrarCuenta } from '../hooks'
@@ -106,9 +105,7 @@ export function CuentaFormModal({ cuenta, onClose }: CuentaFormModalProps) {
         <RequiredLegend />
         {errorGeneral && (
           <Aviso tono="peligro" titulo="No se guardó la cuenta.">
-            {esErrorApi(mutacion.error) && mutacion.error.status === 403
-              ? mutacion.error.message
-              : MENSAJES.errorConexionTexto}
+            {mensajeDeError(mutacion.error)}
           </Aviso>
         )}
         <FormField

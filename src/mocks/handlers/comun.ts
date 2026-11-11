@@ -10,7 +10,10 @@ export function usuarioActual(request: Request) {
   return usuarioDelToken(token)
 }
 
-/** Error con el formato único del backend: { error: { codigo, mensaje, campos } }. */
+/**
+ * Error con el formato único del backend (`app/api/errors.py`): { codigo, mensaje, campos?, detalle? }.
+ * Como el backend, omite `campos` y `detalle` cuando están vacíos.
+ */
 export function errorApi(
   status: number,
   codigo: string,
@@ -18,7 +21,15 @@ export function errorApi(
   campos: Record<string, string> = {},
   detalle?: unknown,
 ) {
-  return HttpResponse.json({ error: { codigo, mensaje, campos, detalle } }, { status })
+  return HttpResponse.json(
+    {
+      codigo,
+      mensaje,
+      ...(Object.keys(campos).length ? { campos } : {}),
+      ...(detalle !== undefined && detalle !== null ? { detalle } : {}),
+    },
+    { status },
+  )
 }
 
 export const noAutenticado = () => errorApi(401, 'NO_AUTENTICADO', 'La sesión no es válida')

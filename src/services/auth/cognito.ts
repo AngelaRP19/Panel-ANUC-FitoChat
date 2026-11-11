@@ -5,13 +5,24 @@ import {
   confirmResetPassword,
   confirmSignIn,
   fetchAuthSession,
-  resetPassword,
   signIn,
   signOut,
   updatePassword,
 } from 'aws-amplify/auth'
 import { env } from '@/config/env'
-import { ErrorAuth, type AdaptadorAuth, type CodigoErrorAuth } from './tipos'
+import {
+  ErrorAuth,
+  type AdaptadorAuth,
+  type CodigoErrorAuth,
+  type EnvioRecuperacion,
+} from './tipos'
+
+/** Error del backend al pedir el código → código de la interfaz. */
+const ERRORES_RECUPERACION: Record<number, CodigoErrorAuth> = {
+  404: 'CUENTA_INEXISTENTE',
+  409: 'CUENTA_DESHABILITADA',
+  429: 'DEMASIADOS_INTENTOS',
+}
 
 let configurado = false
 
@@ -90,19 +101,22 @@ export const adaptadorCognito: AdaptadorAuth = {
     }
   },
 
-  // Nota: con la protección contra enumeración de usuarios activa, Cognito no informa si el
-  // correo existe. Para el mensaje de RQF06 hace falta el endpoint propio del backend (P-08).
-  solicitarCodigo: (correo) =>
-    conErrores(async () => {
-      try {
-        await resetPassword({ username: correo })
-      } catch (error) {
-        if (error instanceof Error && error.name === 'UserNotFoundException') {
-          throw new ErrorAuth('CUENTA_INEXISTENTE')
-        }
-        throw error
-      }
-    }),
+  // RQF06: con la protección contra enumeración de usuarios, Cognito no dice si el correo existe y
+  // «envía» aunque no haya cuenta. El backend lo revisa en la base y, solo si hay cuenta, le pide a
+  // Cognito el código (o reenvía la contraseña temporal de una cuenta que nunca entró).
+  solicitarCodigo: async (correo) => {
+    const { api, esErrorApi } = await import('@/services/apiClient')
+    try {
+      const { data } = await api.post<{ envio: EnvioRecuperacion }>(
+        '/auth/recuperacion/solicitar-codigo',
+        { correo },
+      )
+      return data.envio
+    } catch (error) {
+      if (!esErrorApi(error) || error.status === null) throw new ErrorAuth('RED')
+      throw new ErrorAuth(ERRORES_RECUPERACION[error.status] ?? 'DESCONOCIDO', error.message)
+    }
+  },
 
   // Con sesión iniciada, NotAuthorizedException significa que la contraseña actual no es correcta.
   cambiarContrasena: (actual, nueva) =>

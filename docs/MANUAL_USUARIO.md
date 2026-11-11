@@ -38,8 +38,9 @@ los ve (solo el equipo técnico de la ANUC), cuánto tiempo (hasta que vence el 
 4. **Especie y zona afectada**: elija la especie con el problema y diga en qué parte del lote está.
 5. **Preguntas**: el asistente hace preguntas sobre los síntomas. Responda con sus palabras.
 6. **Fotos**: envíe fotos de la planta afectada, de cerca y con buena luz, de las partes donde se vea el problema
-   (hasta 12; al menos 1). Si una foto no sirve (borrosa, oscura o que no muestra la planta), el chatbot le dice por
-   qué y le pide otra. Cuando termine, toque **Listo**.
+   (hasta 12; al menos 1). Si una foto no sirve (borrosa, oscura, que no muestra la planta o que es de otra planta y
+   no de gulupa, granadilla o maracuyá), el chatbot le dice por qué y le pide otra; esa foto no se guarda. Cuando
+   termine, toque **Listo**.
 7. **Resumen**: revise el resumen y toque **Enviar** para mandar la consulta al técnico.
 
 En las preguntas con opciones, toque el botón o la opción de la lista; también puede escribir su número o su nombre.
@@ -76,7 +77,9 @@ Abra la dirección del panel en el navegador y entre con su correo y contraseña
 
 - **Primera vez del sistema**: si todavía no hay líder técnico, el panel muestra **Primer uso** para crearlo.
 - **Contraseña temporal**: a un técnico nuevo le llega por correo; al entrar, el panel le pide crear una nueva.
-- **¿Olvidó la contraseña?**: en la pantalla de entrada, «¿Olvidaste tu contraseña?» le envía un código al correo.
+- **¿Olvidó la contraseña?**: en la pantalla de entrada, «¿Olvidaste tu contraseña?» le envía un código al correo
+  (revise también la carpeta de spam). Si el correo no tiene cuenta, el panel lo dice y no envía nada. Si la cuenta
+  nunca entró, no hay código: le llega otra vez la contraseña temporal.
 - **Mi cuenta** (menú con su nombre, arriba a la derecha): cambiar sus datos y su contraseña.
 
 Hay dos roles. El **líder técnico** administra todo el panel y asigna los casos. El **técnico** ve y diagnostica solo
@@ -128,9 +131,12 @@ Indicadores del periodo y cinco reportes: casos (R1), identificación (R2), aler
   mensaje; lo que ya envió al panel sigue su curso y le siguen llegando los avisos de ese caso. También permite
   cambiar el estado de varios productores a la vez y exportar la lista.
 - **Fincas y cultivos**: fincas con su ubicación y sus lotes (cultivos y especies). Se pueden registrar y editar aquí o
-  desde el chatbot.
+  desde el chatbot. Al editar la finca se cambian el nombre, el tipo y las especies de cada cultivo; el chatbot usa
+  los datos nuevos en el siguiente caso. Una especie que usa algún caso no se puede quitar: el panel muestra los casos
+  y el botón «Mantener» para conservarla.
 - **Técnicos**: cuentas del panel (líderes y técnicos): registrar con contraseña temporal, editar y activar o
-  desactivar. La única cuenta activa de un rol no se puede desactivar.
+  desactivar. La única cuenta activa de un rol no se puede desactivar. El buscador acepta nombre, correo o celular
+  (como en Productores).
 - **Productores y fincas de mis casos** (técnico): consulta de los productores y las fincas de sus casos, sin editar.
 
 ### 2.8 Parámetros epidemiológicos y documentación (líder)

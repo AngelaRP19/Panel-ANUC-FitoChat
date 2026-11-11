@@ -8,8 +8,8 @@ import { fieldDescriptionId, FormField, RequiredLegend } from '@/components/ui/F
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { toast } from '@/components/ui/Toast'
-import { ESPECIE_LABEL, MENSAJES, TIPO_CULTIVO_LABEL } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { ESPECIE_LABEL, TIPO_CULTIVO_LABEL } from '@/locales/es'
+import { esErrorApi, mensajeDeError } from '@/services/apiClient'
 import type { Especie, TipoCultivo } from '@/types/enums'
 import { useAgregarCultivo } from '../hooks'
 import { cultivoSchema, type CultivoValues } from '../schemas'
@@ -85,7 +85,7 @@ export function AgregarCultivoModal({ finca, onClose }: AgregarCultivoModalProps
         <RequiredLegend />
         {errorGeneral && (
           <Aviso tono="peligro" titulo="No se agregó el cultivo.">
-            {MENSAJES.errorConexionTexto}
+            {mensajeDeError(agregar.error)}
           </Aviso>
         )}
         <FormField
