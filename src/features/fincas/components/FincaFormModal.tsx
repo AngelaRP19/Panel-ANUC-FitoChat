@@ -12,9 +12,9 @@ import { MiniMapa } from '@/components/ui/MiniMapa'
 import { Modal } from '@/components/ui/Modal'
 import { toast } from '@/components/ui/Toast'
 import { FILTROS_PRODUCTORES_VACIOS, useProductores } from '@/features/productores'
-import { ESPECIE_LABEL, MENSAJES, TIPO_CULTIVO_LABEL, VEREDA_LABEL, etiqueta } from '@/locales/es'
+import { ESPECIE_LABEL, TIPO_CULTIVO_LABEL, VEREDA_LABEL, etiqueta } from '@/locales/es'
 import { PATHS } from '@/routes/paths'
-import { esErrorApi } from '@/services/apiClient'
+import { esErrorApi, mensajeDeError } from '@/services/apiClient'
 import { cn } from '@/utils/cn'
 import { latitudEnRango, LATITUD_ZETAQUIRA } from '@/utils/numeros'
 import { useEditarFinca, useRegistrarFinca } from '../hooks'
@@ -33,13 +33,13 @@ const CAMPOS_API: Record<string, keyof FincaValues> = {
   productor_id: 'productor',
 }
 
-/** «Granadilla se usa en el caso activo #0230.» */
+/** «Granadilla no se puede quitar: la usa el caso #0230.» */
 function textoEnUso(e: EspecieEnUso) {
   const especie = etiqueta(ESPECIE_LABEL, e.especie, e.especie)
   const casos = e.casos.map((c) => `#${c}`).join(', ')
   return e.casos.length === 1
-    ? `${especie} se usa en el caso activo ${casos}.`
-    : `${especie} se usa en los casos activos ${casos}.`
+    ? `${especie} no se puede quitar: la usa el caso ${casos}.`
+    : `${especie} no se puede quitar: la usan los casos ${casos}.`
 }
 
 interface FincaFormModalProps {
@@ -51,8 +51,9 @@ interface FincaFormModalProps {
 
 /**
  * Registrar / editar finca (artboard 09b): nombre, vereda, coordenadas con vista previa del
- * punto y, al editar, el tipo y las especies de cada cultivo. Quitar una especie que usa un
- * caso activo muestra el aviso del diseño y pide «Guardar de todas formas».
+ * punto y, al editar, el nombre, el tipo y las especies de cada cultivo (RQF18). Una especie que
+ * usa algún caso no se puede quitar (el caso apunta a ese cultivo y esa especie): el panel lo avisa
+ * con los casos y ofrece mantenerla; los demás cambios se guardan después.
  */
 export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalProps) {
   const editar = !!finca
@@ -72,6 +73,7 @@ export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalPro
     control,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors },
   } = useForm<FincaValues>({
     resolver: zodResolver(fincaSchema),
@@ -91,13 +93,14 @@ export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalPro
     },
   })
   const { fields } = useFieldArray({ control, name: 'cultivos' })
+  const especiesActuales = useWatch({ control, name: 'cultivos' })
   const [latTexto, lngTexto] = useWatch({ control, name: ['latitud', 'longitud'] })
   const lat = Number(latTexto)
   const lng = Number(lngTexto)
   const coordValidas =
     latTexto !== '' && lngTexto !== '' && Number.isFinite(lat) && Number.isFinite(lng)
 
-  const guardar = (v: FincaValues, forzar = false) =>
+  const guardar = (v: FincaValues) =>
     mutacion.mutate(
       {
         nombre: v.nombre.trim(),
@@ -106,8 +109,12 @@ export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalPro
         longitud: Number(v.longitud),
         ...(editar
           ? {
-              cultivos: v.cultivos.map((c) => ({ id: c.id, tipo: c.tipo, especies: c.especies })),
-              forzar,
+              cultivos: v.cultivos.map((c) => ({
+                id: c.id,
+                nombre: c.nombre.trim(),
+                tipo: c.tipo,
+                especies: c.especies,
+              })),
             }
           : { productor_id: v.productor }),
       },
@@ -131,12 +138,26 @@ export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalPro
           for (const [campo, mensaje] of Object.entries(error.campos)) {
             const nombre = CAMPOS_API[campo]
             if (nombre) setError(nombre, { message: mensaje }, { shouldFocus: true })
+            // «cultivos.CUL-000001.nombre»: el nombre repetido de un cultivo
+            const cultivo = /^cultivos\.([^.]+)\.nombre$/.exec(campo)?.[1]
+            const i = v.cultivos.findIndex((c) => c.id === cultivo)
+            if (i >= 0)
+              setError(`cultivos.${i}.nombre`, { message: mensaje }, { shouldFocus: true })
           }
         },
       },
     )
 
-  const onSubmit = handleSubmit((v) => guardar(v, enUso.length > 0))
+  const onSubmit = handleSubmit((v) => guardar(v))
+
+  /** «Mantener la especie»: la vuelve a marcar y quita el aviso. */
+  const mantener = (i: number, aviso: EspecieEnUso) => {
+    const actuales = especiesActuales?.[i]?.especies ?? []
+    if (!actuales.includes(aviso.especie)) {
+      setValue(`cultivos.${i}.especies`, [...actuales, aviso.especie], { shouldDirty: true })
+    }
+    setEnUso((avisos) => avisos.filter((a) => a !== aviso))
+  }
   const errorGeneral =
     mutacion.isError &&
     esErrorApi(mutacion.error) &&
@@ -163,11 +184,7 @@ export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalPro
             Cancelar
           </Button>
           <Button type="submit" form="form-finca" loading={mutacion.isPending}>
-            {enUso.length > 0
-              ? 'Guardar de todas formas'
-              : editar
-                ? 'Guardar cambios'
-                : 'Registrar finca'}
+            {editar ? 'Guardar cambios' : 'Registrar finca'}
           </Button>
         </>
       }
@@ -176,7 +193,7 @@ export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalPro
         <RequiredLegend />
         {errorGeneral && (
           <Aviso tono="peligro" titulo="No se guardó la finca.">
-            {MENSAJES.errorConexionTexto}
+            {mensajeDeError(mutacion.error)}
           </Aviso>
         )}
 
@@ -304,6 +321,20 @@ export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalPro
           const avisos = enUso.filter((e) => e.cultivo === campo.nombre)
           return (
             <div key={campo.id} className="flex flex-col gap-2">
+              <FormField
+                label="Nombre del cultivo"
+                htmlFor={`f-c-${i}`}
+                required
+                error={errors.cultivos?.[i]?.nombre?.message}
+                hint="Así lo verá el productor en el chatbot · ej. Lote 1"
+              >
+                <Input
+                  id={`f-c-${i}`}
+                  invalid={!!errors.cultivos?.[i]?.nombre}
+                  aria-describedby={fieldDescriptionId(`f-c-${i}`)}
+                  {...register(`cultivos.${i}.nombre`)}
+                />
+              </FormField>
               <Controller
                 control={control}
                 name={`cultivos.${i}.especies`}
@@ -357,9 +388,17 @@ export function FincaFormModal({ finca, onClose, onGuardada }: FincaFormModalPro
                         titulo={textoEnUso(a)}
                       >
                         <span id={`aviso-${campo.id}`}>
-                          Si la quitas, el caso la conserva, pero el chatbot ya no la ofrecerá para
-                          este cultivo.
+                          El caso guarda el cultivo y la especie mientras se conserve. Mantén la
+                          especie para guardar los demás cambios.
                         </span>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => mantener(i, a)}
+                        >
+                          Mantener {etiqueta(ESPECIE_LABEL, a.especie, a.especie)}
+                        </Button>
                       </Aviso>
                     ))}
                   </CheckChips>

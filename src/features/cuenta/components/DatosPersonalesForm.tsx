@@ -7,8 +7,7 @@ import { fieldDescriptionId, FormField, RequiredLegend } from '@/components/ui/F
 import { Input } from '@/components/ui/Input'
 import { toast } from '@/components/ui/Toast'
 import type { UsuarioSesion } from '@/context/AuthContext'
-import { MENSAJES } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { esErrorApi, mensajeDeError } from '@/services/apiClient'
 import { aE164, formatearTelefono } from '@/utils/telefono'
 import { useActualizarMisDatos } from '../hooks'
 import { datosSchema, type DatosValues } from '../schemas'
@@ -67,7 +66,7 @@ export function DatosPersonalesForm({ usuario }: { usuario: UsuarioSesion }) {
         <RequiredLegend />
         {errorGeneral && (
           <Aviso tono="peligro" titulo="No se guardaron tus datos.">
-            {esErrorApi(actualizar.error) ? actualizar.error.message : MENSAJES.errorConexionTexto}
+            {mensajeDeError(actualizar.error)}
           </Aviso>
         )}
         <FormField label="Nombre completo" htmlFor="mc-n" required error={errors.nombre?.message}>

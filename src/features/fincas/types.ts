@@ -49,10 +49,13 @@ export interface DatosFinca {
   longitud: number
   /** Solo al registrar. */
   productor_id?: string
-  /** Solo al editar: tipo y especies de cada cultivo. */
-  cultivos?: { id: string; tipo: TipoCultivo | string; especies: (Especie | string)[] }[]
-  /** Guardar aunque se quite una especie que usan casos activos. */
-  forzar?: boolean
+  /** Solo al editar: nombre, tipo y especies de cada cultivo (RQF18). */
+  cultivos?: {
+    id: string
+    nombre: string
+    tipo: TipoCultivo | string
+    especies: (Especie | string)[]
+  }[]
 }
 
 /** Detalle del 409 al quitar una especie en uso. */

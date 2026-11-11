@@ -122,6 +122,8 @@ describe('Productores', () => {
     expect(
       await within(form).findByText('Este número de celular ya está registrado'),
     ).toBeInTheDocument()
+    // RQF07/RQF09/RQF11/RQF04: el 409 de duplicado no es un problema de conexión.
+    expect(within(form).queryByText(/No hay conexión|error inesperado/)).not.toBeInTheDocument()
     expect(within(form).getByLabelText(/^Nombre completo/)).toHaveValue('Camilo Torres')
 
     const tel = within(form).getByLabelText(/^Teléfono de WhatsApp/)

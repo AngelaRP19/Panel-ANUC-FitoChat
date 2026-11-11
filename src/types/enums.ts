@@ -74,7 +74,6 @@ export const TipoCultivo = {
 } as const
 export type TipoCultivo = (typeof TipoCultivo)[keyof typeof TipoCultivo]
 
-
 /** Veredas del diseño. La lista real viene de la API. */
 export const Vereda = {
   JURACAMBITA: 'JURACAMBITA',

@@ -94,7 +94,10 @@ export const usuariosHandlers = [
     const lista = usuarios
       .map(aCuenta)
       .filter((x) => {
-        if (q && !normalizar(`${x.nombre} ${x.correo}`).includes(q)) return false
+        // Como el backend (RQF13): con 3 dígitos o más también busca en el celular.
+        const digitos = q.replace(/\D/g, '')
+        const porCelular = digitos.length >= 3 && x.celular.replace(/\D/g, '').includes(digitos)
+        if (q && !normalizar(`${x.nombre} ${x.correo}`).includes(q) && !porCelular) return false
         if (p.get('rol') && x.rol !== p.get('rol')) return false
         if (p.get('estado') === 'activa' && !x.activo) return false
         if (p.get('estado') === 'deshabilitada' && x.activo) return false

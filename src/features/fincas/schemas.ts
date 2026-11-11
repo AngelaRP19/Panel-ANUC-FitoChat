@@ -26,7 +26,11 @@ export const fincaSchema = z
     cultivos: z.array(
       z.object({
         id: z.string(),
-        nombre: z.string(),
+        nombre: z
+          .string()
+          .trim()
+          .min(1, 'Escribe el nombre del cultivo.')
+          .max(100, 'Usa máximo 100 caracteres.'),
         tipo: z.string(),
         especies: z.array(z.string()).min(1, 'Selecciona al menos una especie'),
       }),

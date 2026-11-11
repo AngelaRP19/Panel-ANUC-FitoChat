@@ -33,8 +33,8 @@ export async function registrarFinca(datos: DatosFinca): Promise<Finca> {
 }
 
 /**
- * Editar finca y cultivos. Si se quita una especie que usan casos activos responde 409
- * `ESPECIE_EN_USO` con `detalle: EspecieEnUso[]`; con `forzar: true` guarda de todas formas.
+ * Editar finca y cultivos (nombre, tipo y especies). Si se quita una especie que usa algún caso
+ * responde 409 `ESPECIE_EN_USO` con `detalle: EspecieEnUso[]` y no guarda nada.
  */
 export async function editarFinca(id: string, datos: DatosFinca): Promise<Finca> {
   const { data } = await api.patch<Finca>(`/fincas/${encodeURIComponent(id)}`, datos)

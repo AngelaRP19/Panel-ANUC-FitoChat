@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Switch } from '@/components/ui/Switch'
 import { toast } from '@/components/ui/Toast'
-import { MENSAJES } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { esErrorApi, mensajeDeError } from '@/services/apiClient'
 import { aE164, formatearTelefono } from '@/utils/telefono'
 import { useEditarProductor, useRegistrarProductor } from '../hooks'
 import { productorSchema, type ProductorValues } from '../schemas'
@@ -114,7 +113,7 @@ export function ProductorFormModal({ productor, onClose, onGuardado }: Productor
           <RequiredLegend />
           {errorGeneral && (
             <Aviso tono="peligro" titulo="No se guardó el productor.">
-              {MENSAJES.errorConexionTexto}
+              {mensajeDeError(mutacion.error)}
             </Aviso>
           )}
           <FormField label="Nombre completo" htmlFor="mp-n" required error={errors.nombre?.message}>

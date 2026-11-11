@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Textarea } from '@/components/ui/Textarea'
 import { toast } from '@/components/ui/Toast'
 import { MENSAJES } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { mensajeDeError } from '@/services/apiClient'
 import { nombreConFecha } from '@/utils/descarga'
 import {
   useCambiarEstadoProductores,
@@ -91,7 +91,7 @@ function MensajeDialog({
     >
       {enviar.isError && (
         <Aviso tono="peligro" titulo="No se envió el mensaje.">
-          {esErrorApi(enviar.error) ? enviar.error.message : MENSAJES.errorConexionTexto}
+          {mensajeDeError(enviar.error)}
         </Aviso>
       )}
       {omitidos > 0 && (
@@ -160,10 +160,7 @@ export function AccionesMasivas({ seleccionados, onQuitarSeleccion }: AccionesMa
         },
         onError: (e) => {
           setAccion(null)
-          toast.error(
-            'No se aplicó el cambio',
-            esErrorApi(e) ? e.message : MENSAJES.errorConexionTexto,
-          )
+          toast.error('No se aplicó el cambio', mensajeDeError(e))
         },
       },
     )

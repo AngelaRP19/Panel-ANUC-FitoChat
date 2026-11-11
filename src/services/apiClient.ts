@@ -37,16 +37,31 @@ export function esErrorApi(error: unknown): error is ErrorApi {
   return error instanceof ErrorApi
 }
 
-/** Formato único de error del backend. */
-interface CuerpoError {
-  error?: { codigo?: string; mensaje?: string; campos?: Record<string, string>; detalle?: unknown }
+/**
+ * Texto para el aviso de error de un formulario o una acción: el mensaje del servidor si respondió
+ * (p. ej. «Hay datos que ya están registrados.») y el de sin conexión solo si no hubo respuesta.
+ */
+export function mensajeDeError(error: unknown): string {
+  return esErrorApi(error) && error.status !== null ? error.message : MENSAJES.errorConexionTexto
 }
+
+/** Formato único de error del backend (`app/api/errors.py`): { codigo, mensaje, campos?, detalle? }. */
+interface ErrorBackend {
+  codigo?: string
+  mensaje?: string
+  campos?: Record<string, string>
+  detalle?: unknown
+}
+/** También se acepta el formato envuelto `{ error: {...} }` del contrato inicial. */
+type CuerpoError = ErrorBackend & { error?: ErrorBackend }
 
 function normalizar(error: AxiosError<CuerpoError>): ErrorApi {
   if (!error.response) {
     return new ErrorApi({ codigo: 'RED', mensaje: MENSAJES.errorConexionTexto, status: null })
   }
-  const cuerpo = error.response.data?.error
+  const datos = error.response.data
+  const cuerpo: ErrorBackend | undefined =
+    datos && typeof datos === 'object' ? (datos.error ?? datos) : undefined
   return new ErrorApi({
     codigo: cuerpo?.codigo ?? `HTTP_${error.response.status}`,
     mensaje: cuerpo?.mensaje ?? MENSAJES.errorGenerico,
