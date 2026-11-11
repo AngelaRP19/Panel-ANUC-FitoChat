@@ -101,7 +101,10 @@ export const adaptadorSimulado: AdaptadorAuth = {
 
   async solicitarCodigo(correo) {
     await esperar()
-    if (!buscar(correo)) throw new ErrorAuth('CUENTA_INEXISTENTE')
+    const u = buscar(correo)
+    if (!u) throw new ErrorAuth('CUENTA_INEXISTENTE')
+    if (!u.activo) throw new ErrorAuth('CUENTA_DESHABILITADA')
+    return u.contrasenaTemporal ? 'CONTRASENA_TEMPORAL' : 'CODIGO'
   },
 
   async cambiarContrasena(actual, nueva) {

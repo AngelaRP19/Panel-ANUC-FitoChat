@@ -60,7 +60,7 @@ describe('Fincas y cultivos', () => {
     ).toHaveAttribute('href', '/mapa?finca=f-el-porvenir')
   })
 
-  it('al quitar una especie en uso avisa y permite guardar de todas formas (09b)', async () => {
+  it('una especie en uso no se quita: avisa con sus casos y permite mantenerla (RQF18)', async () => {
     const { user } = await renderApp(LIDER, '/fincas?finca=f-el-porvenir')
     const ficha = await screen.findByRole('dialog', { name: 'El Porvenir' })
     await user.click(within(ficha).getByRole('button', { name: 'Editar finca' }))
@@ -68,19 +68,44 @@ describe('Fincas y cultivos', () => {
     expect(within(form).getByLabelText(/^Latitud/)).toHaveValue('5.2481')
 
     const especies = within(form).getByRole('group', { name: 'Especies de «Invernadero norte»' })
-    await user.click(within(especies).getByRole('checkbox', { name: 'Granadilla' }))
+    const granadilla = within(especies).getByRole('checkbox', { name: 'Granadilla' })
+    await user.click(granadilla)
     await user.click(within(form).getByRole('button', { name: 'Guardar cambios' }))
     expect(
-      await within(form).findByText('Granadilla se usa en el caso activo #0230.'),
+      await within(form).findByText('Granadilla no se puede quitar: la usa el caso #0230.'),
     ).toBeInTheDocument()
-    expect(
-      within(form).getByText(/el chatbot ya no la ofrecerá para este cultivo/),
-    ).toBeInTheDocument()
+    // El 409 del backend no es un problema de conexión.
+    expect(within(form).queryByText(/No hay conexión con el servidor/)).not.toBeInTheDocument()
 
-    await user.click(within(form).getByRole('button', { name: 'Guardar de todas formas' }))
+    // Al cancelar el cambio (mantenerla), la especie vuelve a quedar marcada y no se pierde nada.
+    await user.click(within(form).getByRole('button', { name: 'Mantener Granadilla' }))
+    expect(granadilla).toBeChecked()
+    expect(within(form).queryByText(/no se puede quitar/)).not.toBeInTheDocument()
+
+    // El nombre del cultivo también se edita; el chatbot lo ofrece con el nombre nuevo.
+    const nombre = within(form).getAllByLabelText(/^Nombre del cultivo/)[0]!
+    await user.clear(nombre)
+    await user.type(nombre, 'Invernadero sur')
+    await user.click(within(form).getByRole('button', { name: 'Guardar cambios' }))
     expect(await screen.findByText('Finca actualizada')).toBeInTheDocument()
     const fichaNueva = await screen.findByRole('dialog', { name: 'El Porvenir' })
-    expect(within(fichaNueva).getByText('Invernadero · gulupa')).toBeInTheDocument()
+    expect(within(fichaNueva).getByText('Invernadero · gulupa y granadilla')).toBeInTheDocument()
+    expect(within(fichaNueva).getByText(/Invernadero sur/)).toBeInTheDocument()
+  })
+
+  it('no deja repetir el nombre de otro cultivo de la finca', async () => {
+    const { user } = await renderApp(LIDER, '/fincas?finca=f-el-porvenir')
+    const ficha = await screen.findByRole('dialog', { name: 'El Porvenir' })
+    await user.click(within(ficha).getByRole('button', { name: 'Editar finca' }))
+    const form = await screen.findByRole('dialog', { name: /Editar finca/ })
+    const [primero, segundo] = within(form).getAllByLabelText(/^Nombre del cultivo/)
+    await user.clear(segundo!)
+    await user.type(segundo!, (primero as HTMLInputElement).value.toUpperCase())
+    await user.click(within(form).getByRole('button', { name: 'Guardar cambios' }))
+    expect(
+      await within(form).findByText('Esta finca ya tiene un cultivo con ese nombre'),
+    ).toBeInTheDocument()
+    expect(within(form).queryByText(/No hay conexión con el servidor/)).not.toBeInTheDocument()
   })
 
   it('valida especies, longitud y advierte la latitud fuera de rango', async () => {

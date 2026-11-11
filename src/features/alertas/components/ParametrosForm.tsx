@@ -9,8 +9,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { fieldDescriptionId, FormField, RequiredLegend } from '@/components/ui/FormField'
 import { Input } from '@/components/ui/Input'
 import { toast } from '@/components/ui/Toast'
-import { CATEGORIA_LABEL, MENSAJES, etiqueta } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { CATEGORIA_LABEL, etiqueta } from '@/locales/es'
+import { esErrorApi, mensajeDeError } from '@/services/apiClient'
 import { formatearFechaHora } from '@/utils/fechas'
 import { formatearDecimal, parsearDecimal } from '@/utils/numeros'
 import { useGuardarParametros } from '../hooks'
@@ -145,7 +145,7 @@ export function ParametrosForm({ parametro }: { parametro: ParametroCategoria })
       >
         {errorGeneral && (
           <Aviso tono="peligro" titulo="No se guardaron los parámetros.">
-            {esErrorApi(guardar.error) ? guardar.error.message : MENSAJES.errorConexionTexto}
+            {mensajeDeError(guardar.error)}
           </Aviso>
         )}
         <div className="grid gap-4 sm:grid-cols-3">

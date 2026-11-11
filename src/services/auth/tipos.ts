@@ -10,6 +10,8 @@ export type CodigoErrorAuth =
   | 'DEMASIADOS_INTENTOS'
   /** Recuperación: el correo no tiene cuenta (RQF06). */
   | 'CUENTA_INEXISTENTE'
+  /** Recuperación: la cuenta existe pero está deshabilitada. */
+  | 'CUENTA_DESHABILITADA'
   /** Recuperación: código incorrecto o vencido. */
   | 'CODIGO_INVALIDO'
   /** Cambio de contraseña: la contraseña actual no es correcta. */
@@ -32,6 +34,12 @@ export function esErrorAuth(error: unknown): error is ErrorAuth {
   return error instanceof ErrorAuth
 }
 
+/**
+ * Qué se envió al pedir recuperar la cuenta: el código para crear una contraseña nueva o, si la
+ * cuenta nunca entró (aún tiene la contraseña temporal), otra vez la contraseña temporal.
+ */
+export type EnvioRecuperacion = 'CODIGO' | 'CONTRASENA_TEMPORAL'
+
 export interface AdaptadorAuth {
   iniciarSesion(correo: string, contrasena: string): Promise<ResultadoInicioSesion>
   /** Completa el reto de contraseña temporal iniciado en `iniciarSesion`. */
@@ -39,8 +47,8 @@ export interface AdaptadorAuth {
   cerrarSesion(): Promise<void>
   /** Token para la API (renovado por el proveedor). null si no hay sesión. */
   obtenerToken(): Promise<string | null>
-  /** Recuperación, paso 1: envía un código al correo. */
-  solicitarCodigo(correo: string): Promise<void>
+  /** Recuperación, paso 1: envía un código al correo (o la contraseña temporal; RQF06). */
+  solicitarCodigo(correo: string): Promise<EnvioRecuperacion>
   /** Recuperación, paso 2: valida el código y fija la nueva contraseña. */
   confirmarRecuperacion(correo: string, codigo: string, nueva: string): Promise<void>
   /** Mi cuenta: cambia la contraseña de la sesión actual (exige la actual). */

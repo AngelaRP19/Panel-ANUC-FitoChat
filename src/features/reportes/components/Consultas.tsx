@@ -12,7 +12,7 @@ import { Select } from '@/components/ui/Select'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { toast } from '@/components/ui/Toast'
 import { MENSAJES } from '@/locales/es'
-import { esErrorApi } from '@/services/apiClient'
+import { esErrorApi, mensajeDeError } from '@/services/apiClient'
 import { cn } from '@/utils/cn'
 import { useConsultas, useEliminarConsulta, useExportarCsv, useGuardarConsulta } from '../hooks'
 import type { ConsultaGuardada, FiltrosReporte, TipoReporte, Visibilidad } from '../types'
@@ -95,7 +95,7 @@ export function GuardarConsultaModal({
       <RequiredLegend />
       {errorGeneral && (
         <Aviso tono="peligro" titulo="No se guardó la consulta.">
-          {esErrorApi(guardar.error) ? guardar.error.message : MENSAJES.errorConexionTexto}
+          {mensajeDeError(guardar.error)}
         </Aviso>
       )}
       <FormField

@@ -106,7 +106,7 @@ describe('Diagnóstico técnico y cierre', () => {
         },
         body: JSON.stringify(cuerpo),
       })
-      return { status: r.status, cuerpo: (await r.json()) as { error: { codigo: string } } }
+      return { status: r.status, cuerpo: (await r.json()) as { codigo: string } }
     }
 
     await renderApp(TECNICO, '/casos/0230')
@@ -115,14 +115,14 @@ describe('Diagnóstico técnico y cierre', () => {
       resultado_tecnico: 'NO_IDENTIFICADO',
     })
     expect(diag.status).toBe(409)
-    expect(diag.cuerpo.error.codigo).toBe('TRANSICION_INVALIDA')
+    expect(diag.cuerpo.codigo).toBe('TRANSICION_INVALIDA')
     cleanup()
 
     await renderApp(LIDER, '/casos/0230')
     await screen.findByRole('heading', { name: 'Diagnóstico técnico registrado' })
     const asig = await llamar('PATCH', '/casos/0230/asignacion', { tecnico_id: 'u-jhon' })
     expect(asig.status).toBe(409)
-    expect(asig.cuerpo.error.codigo).toBe('TRANSICION_INVALIDA')
+    expect(asig.cuerpo.codigo).toBe('TRANSICION_INVALIDA')
   })
 
   it('identificación ambigua: no ofrece «Confirmado» y permite cualquier categoría (P-04)', async () => {

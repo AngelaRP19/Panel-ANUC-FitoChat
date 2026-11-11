@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -22,6 +22,8 @@ interface SolicitarCodigoFormProps {
 /** Recuperar cuenta · paso 1 de 2 (artboard 01c, RQF06). */
 export function SolicitarCodigoForm({ correoInicial = '', onEnviado }: SolicitarCodigoFormProps) {
   const solicitar = useSolicitarCodigo()
+  /** Correo al que se reenvió la contraseña temporal (la cuenta nunca entró: no hay código). */
+  const [temporalA, setTemporalA] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
@@ -37,18 +39,22 @@ export function SolicitarCodigoForm({ correoInicial = '', onEnviado }: Solicitar
 
   const onSubmit = handleSubmit(({ correo }) =>
     solicitar.mutate(correo, {
-      onSuccess: () => onEnviado(correo),
+      onSuccess: (envio) => (envio === 'CODIGO' ? onEnviado(correo) : setTemporalA(correo)),
       onError: (error) => {
-        // RQF06: el correo sin cuenta se marca en el campo y no se avanza al paso 2.
+        // RQF06: el correo sin cuenta se marca en el campo, no se envía nada y no se avanza.
         if (esErrorAuth(error) && error.codigo === 'CUENTA_INEXISTENTE') {
           setError('correo', { message: MENSAJES.cuentaInexistente }, { shouldFocus: true })
+        }
+        if (esErrorAuth(error) && error.codigo === 'CUENTA_DESHABILITADA') {
+          setError('correo', { message: MENSAJES.cuentaDeshabilitada }, { shouldFocus: true })
         }
       },
     }),
   )
 
   const codigo = esErrorAuth(solicitar.error) ? solicitar.error.codigo : null
-  const errorGeneral = solicitar.isError && codigo !== 'CUENTA_INEXISTENTE'
+  const errorGeneral =
+    solicitar.isError && codigo !== 'CUENTA_INEXISTENTE' && codigo !== 'CUENTA_DESHABILITADA'
 
   return (
     <TarjetaAcceso labelledBy="t-rec" onSubmit={onSubmit}>
@@ -61,6 +67,13 @@ export function SolicitarCodigoForm({ correoInicial = '', onEnviado }: Solicitar
           Escribe el correo de tu cuenta y te enviaremos un código de verificación.
         </p>
       </div>
+
+      {temporalA && (
+        <Aviso tono="ok" titulo="Te enviamos otra vez tu contraseña temporal.">
+          Tu cuenta aún no tiene contraseña propia, así que no hay código de recuperación. Revisa{' '}
+          {temporalA} (también la carpeta de spam), entra con la contraseña temporal y crea la tuya.
+        </Aviso>
+      )}
 
       {errorGeneral &&
         (codigo === 'DEMASIADOS_INTENTOS' ? (

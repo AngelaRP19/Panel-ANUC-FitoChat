@@ -7,7 +7,7 @@ import { EstadoAlertaBadge } from '@/components/ui/EstadoBadge'
 import { toast } from '@/components/ui/Toast'
 import { CATEGORIA_LABEL, MENSAJES, VEREDA_LABEL } from '@/locales/es'
 import { PATHS } from '@/routes/paths'
-import { esErrorApi } from '@/services/apiClient'
+import { mensajeDeError } from '@/services/apiClient'
 import { formatearFechaHora } from '@/utils/fechas'
 import { useConfirmarAlerta, useSeguirAlerta } from '../hooks'
 import type { Alerta } from '../types'
@@ -44,11 +44,7 @@ export function AlertaDetalle({ alerta: a, esLider }: AlertaDetalleProps) {
         toast.exito('Alerta confirmada', 'Ahora redacta el mensaje para los productores.')
         void navigate(PATHS.mensajeAlerta(a.id))
       },
-      onError: (e) =>
-        toast.error(
-          'No se confirmó la alerta',
-          esErrorApi(e) ? e.message : MENSAJES.errorConexionTexto,
-        ),
+      onError: (e) => toast.error('No se confirmó la alerta', mensajeDeError(e)),
     })
 
   const onSeguir = () =>
@@ -62,7 +58,7 @@ export function AlertaDetalle({ alerta: a, esLider }: AlertaDetalleProps) {
                 `Recibirás una notificación cuando ${a.id} cambie de estado.`,
               )
             : toast.info('Ya no recibirás avisos de esta alerta', a.id),
-        onError: () => toast.error('No se guardó el cambio', MENSAJES.errorConexionTexto),
+        onError: (e) => toast.error('No se guardó el cambio', mensajeDeError(e)),
       },
     )
 

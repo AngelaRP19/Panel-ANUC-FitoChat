@@ -37,6 +37,8 @@ describe('Mi cuenta', () => {
     expect(
       await within(datos).findByText('Este número de celular ya está registrado'),
     ).toBeInTheDocument()
+    // RQF07/RQF09/RQF11/RQF04: el 409 de duplicado no es un problema de conexión.
+    expect(within(datos).queryByText(/No hay conexión|error inesperado/)).not.toBeInTheDocument()
 
     await user.click(within(datos).getByRole('button', { name: 'Cancelar' }))
     expect(cel).toHaveValue('313 402 7781')

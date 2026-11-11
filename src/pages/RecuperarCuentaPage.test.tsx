@@ -75,6 +75,18 @@ describe('RecuperarCuentaPage', () => {
     expect(screen.queryByText('Paso 2 de 2')).not.toBeInTheDocument()
   })
 
+  it('a una cuenta que nunca entró le reenvía la contraseña temporal (RQF06)', async () => {
+    const user = userEvent.setup()
+    renderRecuperar()
+    const correo = await screen.findByLabelText(/^Correo electrónico/)
+    await user.type(correo, 'jhon.sanabria@anuc.test')
+    await user.click(screen.getByRole('button', { name: 'Enviar código' }))
+    expect(
+      await screen.findByText('Te enviamos otra vez tu contraseña temporal.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('Paso 2 de 2')).not.toBeInTheDocument()
+  })
+
   it('valida el código y la nueva contraseña, y vuelve al login con el aviso', async () => {
     const user = userEvent.setup()
     const { router } = renderRecuperar()
